@@ -7,7 +7,8 @@ import requests
 
 
 from app.models.plan import Plan
-from app.models.planner import Planner
+from app.models.content import Content
+
 
 plan_bp = Blueprint("plan_bp", __name__, url_prefix="/plans")
 
@@ -57,7 +58,7 @@ def get_all_plans():
     return jsonify(plans_response), 200
 
 
-# GET - Read; Select a specific board
+# GET - Read; Select a specific plan
 
 @plan_bp.route("/<plan_id>", methods=["GET"])
 def get_one_plan(plan_id):
@@ -77,9 +78,66 @@ def validate_plan(plan_id):
         plan_id = int(plan_id)
     except:
         abort(make_response(
-            {"message": f"Board: {plan_id} is not a valid plan id"}, 400))
+            {"message": f"Plan: {plan_id} is not a valid plan id"}, 400))
     plan = Plan.query.get(plan_id)
     if not plan:
         abort(make_response(
             {"message": f"Plan: #{plan_id} not found"}, 404))
     return plan
+
+# DELETE - delete; delete a specific plan
+@plan_bp.route('/<plan_id>', methods=['DELETE'])
+def delete_one_plan(plan_id):
+    plan = validate_plan(plan_id)
+
+    db.session.delete(plan)
+    db.session.commit()
+
+    rsp = {'msg': f'Plan #{plan.board_id} successfully deleted!'}
+    return jsonify(rsp), 200
+
+
+# POST: Create a new content for the selected plan,
+@plan_bp.route("/<plan_id>/contents", methods=["POST"])
+def create_content_for_plan(plan_id):
+    plan = validate_plan(plan_id)
+    request_body = request.get_json()
+
+    new_content = Content(
+        content_type=request_body["content_type"],
+        content=request_body["content"],
+        comment=request_body["comment"],
+        plan = plan,
+        )
+
+    db.session.add(new_content)
+    db.session.commit()
+
+
+
+    return {
+        'msg': f'Succesfully created new content for {plan.idea}',
+        'content_type': new_content.content_type,
+        'content': new_content.content,
+        'content_id': new_content.content_id,
+        'like_count': new_content.like_count,
+        'comment': new_content.comment,
+        'plan_id': plan_id
+    }, 201
+
+
+    # GET- Read all contents in a selected plan
+@plan_bp.route("/<plan_id>/contents", methods=["GET"])
+def get_all_contents_for_plan(plan_id):
+    chosen_plan = validate_plan(plan_id)
+    chosen_plan_contents = []
+    for content in chosen_plan.contents:
+        chosen_plan.contents.append({
+            'content_type': content.content_type,
+            'content': content.content,
+            'content_id': content.content_id,
+            'like_count': content.like_count,
+            'comment': content.comment,
+            'plan_id': content.plan_id
+        })
+    return jsonify(chosen_plan.contents), 200
