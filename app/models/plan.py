@@ -7,4 +7,4 @@ class Plan(db.Model):
     idea = db.Column(db.String)
     planner = db.Column(db.String)    
     contents = db.relationship("Content", back_populates="plan", lazy= True)
-    # created_date = db.Column (db.DateTime, nullable=False, default=datetime.utcnow)
+    created_date = db.Column (db.DateTime, nullable=False, default=datetime.utcnow)
