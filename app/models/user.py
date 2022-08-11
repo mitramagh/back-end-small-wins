@@ -1,65 +1,46 @@
 from app import db
+from flask_login import UserMixin
+from flask import jsonify
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
 
+class User(db.Model, UserMixin):
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    register_at = db.Column(db.DateTime, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
+    user_name = db.Column(db.String)
+    password = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
+    login_id = db.Column(db.Text, nullable=False)
 
-# class User(db.Model):
-#     User_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-#     email = db.Column(db.String, nullable=True)
-#     password = db.Column(db.String, nullable=True)
+    def response_user_profile(self):
+        return {
+            "id": self.id,
+            "register_at": self.register_at,
+            "login_id": self.login_id,
+            "email": self.email,
+            "name": self.name,
+        }
 
+    @staticmethod
+    def post_user_oauth(user):
+        chosen_user = User.query.get(user["user_id"])
+        if not chosen_user:
+            new_user = User(
+                email=user["email"],
+                name=user["name"],
+                google_id=user["google_id"],
+                user_name=None,
+                password=None,
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            return jsonify(new_user), 201
 
-class User:
-    def __init__(self, id, email, password, is_admin):
-        self.id = id
-        self.email = email
-        self.password = password
-        self.is_admin = is_admin
-
-    def __repr__(self):
-        template = 'User id={s.id}: <{s.email}, is_admin={s.is_admin}>'
-        return template.format(s=self)
-
-    def __str__(self):
-        return self.__repr__()
-
-    def match_password(self, password):
-        if password != self.password:
-            raise User.PasswordDoesNotMatch
-
-    class DoesNotExist(BaseException):
-        pass
-
-    class TooManyObjects(BaseException):
-        pass
-
-    class PasswordDoesNotMatch(BaseException):
-        pass
-
-    class objects:
-        _storage = []
-        _max_id = 0
-
-        @classmethod
-        def create(cls, email, password, is_admin=False):
-            cls._max_id += 1
-            cls._storage.append(User(cls._max_id, email, password, is_admin))
-
-        @classmethod
-        def all(cls):
-            return cls._storage
-
-        @classmethod
-        def filter(cls, **kwargs):
-            users = cls._storage
-            for k, v in kwargs.items():
-                if v:
-                    users = [u for u in users if getattr(u, k, None) == v]
-            return users
-
-        @classmethod
-        def get(cls, id=None, email=None):
-            users = cls.filter(id=id, email=email)
-            if len(users) > 1:
-                raise User.TooManyObjects
-            if len(users) == 0:
-                raise User.DoesNotExist
-            return users[0]
+    @staticmethod
+    def get_user_oauth(google_id):
+        chosen_user = User.query.get(google_id)
+        if not chosen_user:
+            return None
+        return jsonify(chosen_user), 200
