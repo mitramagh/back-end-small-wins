@@ -19,7 +19,7 @@ class Content(db.Model):
     content_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     # content_type = db.Column(pgEnum(ContentType, name='_option', create_type=False), unique=False, nullable=True)
     content = db.Column(db.String)
-    type=db.Column(db.String, nullable=False, default="text")
+    type=db.Column(db.String, nullable=False)
     like_count = db.Column(db.Integer, default=0)
     comment = db.Column(db.String, nullable=True)
     # color=db.Column(db.String, nullable=True)

@@ -27,8 +27,8 @@ def create_one_plan():
         'id': new_plan.plan_id,
         'idea': new_plan.idea,
         'planner': new_plan.planner,
-        # 'created_date': new_plan.created_date,
-        # 'msg': f'{new_plan.planner} created {new_plan.idea} at {new_plan.created_date}'
+        'created_date': new_plan.created_date,
+        'msg': f'{new_plan.planner} created {new_plan.idea} at {new_plan.created_date}'
     }, 201
 
 
@@ -55,7 +55,7 @@ def get_all_plans():
             "id": plan.plan_id,
             "idea": plan.idea,
             "planner": plan.planner,
-            # 'created_date':plan.created_date,
+            'created_date':plan.created_date,
         })
 
     return jsonify(plans_response), 200
@@ -71,7 +71,7 @@ def get_one_plan(plan_id):
         "id": chosen_plan.plan_id,
         "idea": chosen_plan.idea,
         "planner": chosen_plan.planner,
-        # 'created_date':chosen_plan.created_date,
+        'created_date':chosen_plan.created_date,
     }
     return jsonify(response), 200
 
