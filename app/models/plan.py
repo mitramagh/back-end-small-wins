@@ -8,3 +8,4 @@ class Plan(db.Model):
     planner = db.Column(db.String)    
     contents = db.relationship("Content", back_populates="plan", lazy= True)
     created_date = db.Column (db.DateTime, nullable=False, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)

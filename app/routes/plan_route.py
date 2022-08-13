@@ -21,6 +21,9 @@ def create_one_plan():
 
     new_plan = Plan(idea=request_body['idea'], planner=request_body['planner'])
 
+    if "completed_at" in request_body:
+        new_plan.completed_at = request_body["completed_at"]
+
     db.session.add(new_plan)
     db.session.commit()
     return {
@@ -28,6 +31,7 @@ def create_one_plan():
         'idea': new_plan.idea,
         'planner': new_plan.planner,
         'created_date': new_plan.created_date,
+        'is_complete':bool(new_plan.completed_at),
         'msg': f'{new_plan.planner} created {new_plan.idea} at {new_plan.created_date}'
     }, 201
 
@@ -56,6 +60,7 @@ def get_all_plans():
             "idea": plan.idea,
             "planner": plan.planner,
             'created_date':plan.created_date,
+            'is_complete':bool(plan.completed_at),
         })
 
     return jsonify(plans_response), 200
@@ -72,6 +77,7 @@ def get_one_plan(plan_id):
         "idea": chosen_plan.idea,
         "planner": chosen_plan.planner,
         'created_date':chosen_plan.created_date,
+        'is_complete':bool(chosen_plan.completed_at),
     }
     return jsonify(response), 200
 
@@ -102,6 +108,40 @@ def delete_one_plan(plan_id):
     rsp = {'msg': f'Plan #{plan.plan_id} successfully deleted!'}
     return jsonify(rsp), 200
 
+
+# update chosen plan is completed
+@plan_bp.route('/<plan_id>/mark_incomplete', methods=['PATCH'])
+def update_plan_is_complete(plan_id):
+    chosen_plan = validate_plan(plan_id)
+
+    chosen_plan.completed_at = datetime.utcnow()
+    db.session.commit()
+
+    response = {
+        "id": chosen_plan.plan_id,
+        "idea": chosen_plan.idea,
+        "planner": chosen_plan.planner,
+        'created_date':chosen_plan.created_date,
+        'is_complete':bool(chosen_plan.completed_at),
+    }
+    return jsonify(response), 200
+
+    # update chosen plan is Incompleted
+@plan_bp.route('/<plan_id>/mark_complete', methods=['PATCH'])
+def update_plan_is_complete(plan_id):
+    chosen_plan = validate_plan(plan_id)
+
+    chosen_plan.completed_at = None
+    db.session.commit()
+
+    response = {
+        "id": chosen_plan.plan_id,
+        "idea": chosen_plan.idea,
+        "planner": chosen_plan.planner,
+        'created_date':chosen_plan.created_date,
+        'is_complete':bool(chosen_plan.completed_at),
+    }
+    return jsonify(response), 200
 
 # POST: Create a new content for the selected plan,
 @plan_bp.route("/<plan_id>/contents", methods=["POST"])
