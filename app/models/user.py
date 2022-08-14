@@ -1,46 +1,42 @@
 from app import db
-from flask_login import UserMixin
-from flask import jsonify
 import uuid
-from sqlalchemy.dialects.postgresql import UUID
-from datetime import datetime
+import jwt
+from flask_sqlalchemy import SQLAlchemy
+import app
+import uuid
+from werkzeug.security import generate_password_hash,check_password_hash
+from flask import Blueprint, request, jsonify, make_response
+from functools import wraps
 
-class User(db.Model, UserMixin):
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    register_at = db.Column(db.DateTime, nullable=False)
-    email = db.Column(db.String, unique=True, nullable=False)
-    user_name = db.Column(db.String)
-    password = db.Column(db.String)
-    name = db.Column(db.String, nullable=False)
-    login_id = db.Column(db.Text, nullable=False)
 
-    def response_user_profile(self):
-        return {
-            "id": self.id,
-            "register_at": self.register_at,
-            "login_id": self.login_id,
-            "email": self.email,
-            "name": self.name,
-        }
 
-    @staticmethod
-    def post_user_oauth(user):
-        chosen_user = User.query.get(user["user_id"])
-        if not chosen_user:
-            new_user = User(
-                email=user["email"],
-                name=user["name"],
-                google_id=user["google_id"],
-                user_name=None,
-                password=None,
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            return jsonify(new_user), 201
+db = SQLAlchemy()
 
-    @staticmethod
-    def get_user_oauth(google_id):
-        chosen_user = User.query.get(google_id)
-        if not chosen_user:
-            return None
-        return jsonify(chosen_user), 200
+class User(db.Model):
+    user_id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True)
+    password = db.Column(db.String(50), unique=False)
+    public_id = db.Column(db.Integer)
+    # plans = db.relationship("Plan", back_populates="user", lazy= True)
+
+
+# db.create_all()
+
+
+def token_required(f):
+    @wraps(f)
+    def decorator(*args, **kwargs):
+        token = None
+        if 'x-access-tokens' in request.headers:
+            token = request.headers['x-access-tokens']
+
+        if not token:
+            return jsonify({'message': 'a valid token is missing'})
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            current_user = User.query.filter_by(public_id=data['public_id']).first()
+        except:
+            return jsonify({'message': 'token is invalid'})
+
+        return f(current_user, *args, **kwargs)
+    return decorator

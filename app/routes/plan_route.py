@@ -23,6 +23,10 @@ def create_one_plan():
 
     if "completed_at" in request_body:
         new_plan.completed_at = request_body["completed_at"]
+    if new_plan.completed_at:
+        completed = True
+    else:
+        completed = False
 
     db.session.add(new_plan)
     db.session.commit()
@@ -31,7 +35,7 @@ def create_one_plan():
         'idea': new_plan.idea,
         'planner': new_plan.planner,
         'created_date': new_plan.created_date,
-        'is_complete':bool(new_plan.completed_at),
+        'is_complete':completed,
         'msg': f'{new_plan.planner} created {new_plan.idea} at {new_plan.created_date}'
     }, 201
 
@@ -53,6 +57,7 @@ def validate_plan_input(request_body):
 @plan_bp.route("", methods=["GET"])
 def get_all_plans():
     plans = Plan.query.all()
+    
     plans_response = []
     for plan in plans:
         plans_response.append({
@@ -71,7 +76,7 @@ def get_all_plans():
 @plan_bp.route("/<plan_id>", methods=["GET"])
 def get_one_plan(plan_id):
     chosen_plan = validate_plan(plan_id)
-
+  
     response = {
         "id": chosen_plan.plan_id,
         "idea": chosen_plan.idea,
@@ -128,7 +133,7 @@ def update_plan_is_complete(plan_id):
 
     # update chosen plan is Incompleted
 @plan_bp.route('/<plan_id>/mark_complete', methods=['PATCH'])
-def update_plan_is_complete(plan_id):
+def update_plan_is_incomplete(plan_id):
     chosen_plan = validate_plan(plan_id)
 
     chosen_plan.completed_at = None
