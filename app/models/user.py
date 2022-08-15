@@ -1,4 +1,4 @@
-from app import db
+from app import db, create_app
 import uuid
 import jwt
 from flask_sqlalchemy import SQLAlchemy
@@ -7,10 +7,15 @@ import uuid
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask import Blueprint, request, jsonify, make_response
 from functools import wraps
+from flask_login import UserMixin
 
 
 
 db = SQLAlchemy()
+# def initialize_db(app):
+#   app.app_context().push()
+#   db.init_app(app)
+#   db.create_all()
 
 class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
@@ -19,24 +24,19 @@ class User(db.Model):
     public_id = db.Column(db.Integer)
     # plans = db.relationship("Plan", back_populates="user", lazy= True)
 
+db.create_all(app=create_app())
 
-# db.create_all()
 
 
-def token_required(f):
-    @wraps(f)
-    def decorator(*args, **kwargs):
-        token = None
-        if 'x-access-tokens' in request.headers:
-            token = request.headers['x-access-tokens']
+def set_password(self, password):
+        """Create hashed password."""
+        self.password = generate_password_hash(
+            password,
+            method='sha256'
+        )
+def check_password(self, password):
+        """Check hashed password."""
+        return check_password_hash(self.password, password)
 
-        if not token:
-            return jsonify({'message': 'a valid token is missing'})
-        try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            current_user = User.query.filter_by(public_id=data['public_id']).first()
-        except:
-            return jsonify({'message': 'token is invalid'})
-
-        return f(current_user, *args, **kwargs)
-    return decorator
+def __repr__(self):
+        return '<User {}>'.format(self.username)
