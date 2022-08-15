@@ -115,7 +115,7 @@ def delete_one_plan(plan_id):
 
 
 # update chosen plan is completed
-@plan_bp.route('/<plan_id>/mark_incomplete', methods=['PATCH'])
+@plan_bp.route('/<plan_id>/mark_complete', methods=['PATCH'])
 def update_plan_is_complete(plan_id):
     chosen_plan = validate_plan(plan_id)
 
@@ -132,7 +132,7 @@ def update_plan_is_complete(plan_id):
     return jsonify(response), 200
 
     # update chosen plan is Incompleted
-@plan_bp.route('/<plan_id>/mark_complete', methods=['PATCH'])
+@plan_bp.route('/<plan_id>/mark_incomplete', methods=['PATCH'])
 def update_plan_is_incomplete(plan_id):
     chosen_plan = validate_plan(plan_id)
 
