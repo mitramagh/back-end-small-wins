@@ -21,13 +21,6 @@ def create_one_plan():
 
     new_plan = Plan(idea=request_body['idea'], planner=request_body['planner'])
 
-    # if "completed_at" in request_body:
-    #     new_plan.completed_at = request_body["completed_at"]
-    # if new_plan.completed_at:
-    #     completed = True
-    # else:
-    #     completed = False
-
     db.session.add(new_plan)
     db.session.commit()
     return {
@@ -158,9 +151,11 @@ def create_content_for_plan(plan_id):
     new_content = Content(
         type=request_body["type"],
         content=request_body["content"],
-
         plan=plan,
     )
+    # if "comment" in request_body:
+    #     new_content=request_body["comment"]
+
     print(new_content)
     db.session.add(new_content)
     db.session.commit()

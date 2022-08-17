@@ -42,11 +42,15 @@ def validate_content(content_id):
 @content_bp.route('/<content_id>', methods=['PUT'])
 def update_one_content(content_id):
     content = validate_content(content_id)
+    request_body = request.get_json()
+    
     try:
-        content.like_count += 1
+        if "like_count" in request_body:
+            content.like_count += 1
+    
     except KeyError:
         return {
-            'msg': 'Update failed. like_count is required!'
+            'msg': 'Update failed!'
         }, 400
 
     db.session.add(content)
@@ -65,4 +69,3 @@ def update_one_content(content_id):
     })
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
-
